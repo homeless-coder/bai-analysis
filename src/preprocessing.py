@@ -70,6 +70,30 @@ def clean_text_columns(df: pd.DataFrame, columns: tuple[str, ...]) -> pd.DataFra
     return cleaned_df
 
 
+def standardize_bai_data(
+    df: pd.DataFrame,
+    text_columns: tuple[str, ...] = ("category", "gender", "date", "email", "name"),
+    required_columns: tuple[str, ...] | None = None,
+) -> pd.DataFrame:
+    """Aplica una limpieza estandar: texto, faltantes, duplicados y category en mayusculas."""
+    standardized_df = df.copy()
+
+    standardized_df = clean_text_columns(standardized_df, columns=text_columns)
+
+    if "category" in standardized_df.columns:
+        standardized_df["category"] = standardized_df["category"].apply(
+            lambda value: value.upper() if isinstance(value, str) else value
+        )
+
+    if required_columns is None:
+        required_columns = tuple(standardized_df.columns)
+
+    standardized_df = standardized_df.dropna(subset=list(required_columns))
+    standardized_df = standardized_df.drop_duplicates()
+
+    return standardized_df
+
+
 def prepare_bai_dataset(
     df: pd.DataFrame,
     columns_to_drop: tuple[str, ...] = ("answers", "email", "name"),
@@ -80,7 +104,11 @@ def prepare_bai_dataset(
     return prepared_df.drop(columns=columns_present)
 
 
-def validate_bai_dataset(df: pd.DataFrame, expected_items: int = 21) -> None:
+def validate_bai_dataset(
+    df: pd.DataFrame,
+    expected_items: int = 21,
+    allowed_categories: tuple[str, ...] = ("LOW", "MODERATE", "SEVERE"),
+) -> None:
     """Valida que el dataset final tenga la estructura esperada para almacenamiento."""
     expected_bai_columns = [f"BAI_{idx}" for idx in range(1, expected_items + 1)]
     missing_columns = [column for column in expected_bai_columns if column not in df.columns]
@@ -95,3 +123,13 @@ def validate_bai_dataset(df: pd.DataFrame, expected_items: int = 21) -> None:
     if df.columns.duplicated().any():
         duplicated_columns = df.columns[df.columns.duplicated()].tolist()
         raise ValueError(f"Hay columnas duplicadas en el dataset final: {duplicated_columns}")
+
+    if "category" not in df.columns:
+        raise ValueError("La columna 'category' es obligatoria en el dataset final.")
+
+    invalid_categories = sorted(set(df["category"].dropna()) - set(allowed_categories))
+    if invalid_categories:
+        raise ValueError(
+            f"Se encontraron valores invalidos en 'category': {invalid_categories}. "
+            f"Valores permitidos: {list(allowed_categories)}"
+        )
