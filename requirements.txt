@@ -1,3 +1,6 @@
+pandas
+openpyxl
+python-dotenv
 aext-assistant @ file:///C:/b/abs_1bfn_ondsd/croot/aext-assistant_1746560154452/work
 aext-assistant-server @ file:///C:/b/abs_6f6umrladb/croot/aext-assistant-server_1746552992573/work
 aext-core @ file:///C:/b/abs_a0497039ax/croot/aext-core_1746546102863/work
