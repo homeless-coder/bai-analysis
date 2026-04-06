@@ -45,6 +45,31 @@ def expand_bai_answers(df: pd.DataFrame, column: str = "answers") -> pd.DataFram
     return pd.concat([expanded_df, answers_expanded], axis=1)
 
 
+def _strip_wrapping_quotes(value):
+    """Quita comillas simples o dobles envolventes de un texto."""
+    if not isinstance(value, str):
+        return value
+
+    cleaned = value.strip()
+    quote_pairs = {'"': '"', "'": "'"}
+
+    while len(cleaned) >= 2 and cleaned[0] in quote_pairs and cleaned[-1] == quote_pairs[cleaned[0]]:
+        cleaned = cleaned[1:-1].strip()
+
+    return cleaned
+
+
+def clean_text_columns(df: pd.DataFrame, columns: tuple[str, ...]) -> pd.DataFrame:
+    """Limpia comillas envolventes en columnas de texto seleccionadas."""
+    cleaned_df = df.copy()
+
+    for column in columns:
+        if column in cleaned_df.columns:
+            cleaned_df[column] = cleaned_df[column].apply(_strip_wrapping_quotes)
+
+    return cleaned_df
+
+
 def prepare_bai_dataset(
     df: pd.DataFrame,
     columns_to_drop: tuple[str, ...] = ("answers", "email", "name"),
