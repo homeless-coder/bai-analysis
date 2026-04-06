@@ -13,5 +13,9 @@ BAI_DATA_PATH = os.getenv("BAI_DATA_PATH")
 # Convertir a Path
 BAI_DATA_PATH = BASE_DIR / BAI_DATA_PATH if BAI_DATA_PATH else None
 
-# Ruta para datos procesados (puedes ajustar el nombre de archivo según tu flujo)
-DATA_PROCESSED = os.getenv("DATA_PROCESSED_PATH")
+# Directorio para datos procesados
+DATA_PROCESSED_DIR = os.getenv("DATA_PROCESSED_DIR")
+DATA_PROCESSED_DIR = BASE_DIR / DATA_PROCESSED_DIR if DATA_PROCESSED_DIR else None
+
+# Ruta final del archivo procesado
+DATA_PROCESSED = DATA_PROCESSED_DIR / "BAI_PROCESSED.xlsx" if DATA_PROCESSED_DIR else None
