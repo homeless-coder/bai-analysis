@@ -1,0 +1,19 @@
+# Virtual environment
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+
+# Data (important)
+data/raw/
+
+# OS
+.DS_Store
+Thumbs.db
