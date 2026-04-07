@@ -15,6 +15,10 @@ __pycache__/
 data/raw/
 data/processed/
 
+# Outputs (important)
+outputs/figures/
+outputs/tables/
+
 # OS
 .DS_Store
 Thumbs.db

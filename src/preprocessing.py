@@ -96,7 +96,7 @@ def standardize_bai_data(
 
 def prepare_bai_dataset(
     df: pd.DataFrame,
-    columns_to_drop: tuple[str, ...] = ("answers", "email", "name"),
+    columns_to_drop: tuple[str, ...] = ("answers", "email", "name", "date"),
 ) -> pd.DataFrame:
     """Elimina columnas auxiliares o sensibles del dataset final."""
     prepared_df = df.copy()
@@ -116,7 +116,7 @@ def validate_bai_dataset(
     if missing_columns:
         raise ValueError(f"Faltan columnas BAI en el dataset final: {missing_columns}")
 
-    forbidden_columns = [column for column in ("answers", "email", "name") if column in df.columns]
+    forbidden_columns = [column for column in ("answers", "email", "name", "date") if column in df.columns]
     if forbidden_columns:
         raise ValueError(f"Estas columnas debieron eliminarse antes de guardar: {forbidden_columns}")
 
