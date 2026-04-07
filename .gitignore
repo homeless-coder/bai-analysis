@@ -15,9 +15,8 @@ __pycache__/
 data/raw/
 data/processed/
 
-# Outputs (important)
-outputs/figures/
-outputs/tables/
+# Outputs (generated files)
+outputs/
 
 # OS
 .DS_Store
