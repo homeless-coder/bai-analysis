@@ -22,3 +22,8 @@ outputs/tables/
 # OS
 .DS_Store
 Thumbs.db
+
+# Images
+*.png
+*.jpg
+*.jpeg
