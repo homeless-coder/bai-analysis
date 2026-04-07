@@ -19,3 +19,6 @@ DATA_PROCESSED_DIR = BASE_DIR / DATA_PROCESSED_DIR if DATA_PROCESSED_DIR else No
 
 # Ruta final del archivo procesado
 DATA_PROCESSED = DATA_PROCESSED_DIR / "BAI_PROCESSED.xlsx" if DATA_PROCESSED_DIR else None
+
+# Directorio para figuras generadas
+OUTPUTS_FIGURES = BASE_DIR / "outputs" / "figures"
