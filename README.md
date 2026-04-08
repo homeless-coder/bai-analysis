@@ -26,9 +26,9 @@ El objetivo no es hacer diagnóstico clínico, sino convertir las respuestas del
 
 El proyecto está organizado como un pipeline reproducible en notebooks:
 
-1. **Limpieza de datos**: carga del archivo raw, parsing de respuestas, expansión de los 21 ítems BAI, estandarización de categorías y eliminación de columnas sensibles.
+1. **Limpieza de datos**: carga del archivo raw, parsing de respuestas, expansión de los 21 ítems BAI, estandarización de categorías, eliminación de columnas sensibles y creación del dataset intermedio limpio.
 2. **EDA**: revisión de distribuciones, síntomas principales, relación con variables demográficas y correlaciones.
-3. **Modeling**: escalamiento de síntomas, diagnóstico de valores de `k`, clustering con KMeans, PCA para visualización, Random Forest y análisis de importancia de variables.
+3. **Modeling**: escalamiento de síntomas, diagnóstico de valores de `k`, clustering con KMeans, creación del dataset final con `cluster`, PCA para visualización, Random Forest y análisis de importancia de variables.
 4. **Insights and reporting**: síntesis ejecutiva de hallazgos, interpretación, limitaciones e implicaciones prácticas.
 
 ## Hallazgos Principales
@@ -55,6 +55,7 @@ bai-analysis/
 |   |-- raw/
 |   |   `-- bai_raw.xlsx
 |   `-- processed/
+|       |-- BAI_CLEANED.xlsx
 |       `-- BAI_PROCESSED.xlsx
 |-- notebooks/
 |   |-- 01_data_cleaning.ipynb
@@ -92,13 +93,19 @@ El archivo raw esperado es:
 data/raw/bai_raw.xlsx
 ```
 
-El dataset limpio se guarda como:
+El notebook de limpieza guarda el dataset intermedio como:
+
+```text
+data/processed/BAI_CLEANED.xlsx
+```
+
+El notebook de modelado crea una sola vez el dataset final, ya con la columna `cluster`, en:
 
 ```text
 data/processed/BAI_PROCESSED.xlsx
 ```
 
-Durante la preparación se eliminan columnas auxiliares o sensibles como `answers`, `email`, `name` y `date` del dataset final. El análisis usa principalmente `category`, `gender`, `totalScore` y las columnas `BAI_1` a `BAI_21`.
+Durante la preparación se eliminan columnas auxiliares o sensibles como `answers`, `email`, `name` y `date`. El análisis usa principalmente `category`, `gender`, `totalScore`, las columnas `BAI_1` a `BAI_21` y, desde el modelado, `cluster`.
 
 ## Configuración
 
@@ -107,6 +114,8 @@ Crea un archivo `.env` en la raíz del proyecto con:
 ```env
 BAI_DATA_PATH=data/raw/bai_raw.xlsx
 DATA_PROCESSED_DIR=data/processed
+DATA_CLEANED_PATH=data/processed/BAI_CLEANED.xlsx
+DATA_PROCESSED_PATH=data/processed/BAI_PROCESSED.xlsx
 ```
 
 Luego instala las dependencias:
