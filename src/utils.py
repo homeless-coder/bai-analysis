@@ -129,6 +129,51 @@ def build_dataset_summary(df: pd.DataFrame, bai_columns: list[str]) -> pd.DataFr
     })
 
 
+def build_symptom_correlation_table(
+    df: pd.DataFrame,
+    score_column: str = "totalScore",
+    bai_columns: list[str] | None = None,
+    include_labels: bool = True,
+) -> pd.DataFrame:
+    """Calcula la correlación de cada síntoma BAI contra el score total."""
+    bai_columns = get_bai_columns(df) if bai_columns is None else bai_columns
+    validate_bai_analysis_columns(df, bai_columns, required_columns=(score_column,))
+
+    corr_series = (
+        df[bai_columns + [score_column]]
+        .corr(numeric_only=True)[score_column]
+        .drop(score_column)
+        .sort_values(ascending=False)
+    )
+
+    corr_df = corr_series.rename_axis("symptom").reset_index(name="correlation")
+    if include_labels:
+        corr_df["label"] = corr_df["symptom"].map(BAI_SYMPTOMS)
+
+    return corr_df
+
+
+def export_symptom_correlations(
+    df: pd.DataFrame,
+    output_path: str | Path,
+    score_column: str = "totalScore",
+    bai_columns: list[str] | None = None,
+    include_labels: bool = False,
+) -> Path:
+    """Exporta a CSV la correlación de síntomas BAI contra el score total."""
+    correlation_table = build_symptom_correlation_table(
+        df,
+        score_column=score_column,
+        bai_columns=bai_columns,
+        include_labels=include_labels,
+    )
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    correlation_table.to_csv(output_path, index=False)
+    return output_path
+
+
 def build_category_counts(df: pd.DataFrame, category_order: list[str] | None = None) -> pd.DataFrame:
     """Cuenta categorias y calcula porcentajes."""
     category_order = CATEGORY_ORDER if category_order is None else category_order

@@ -7,29 +7,30 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Ruta desde .env
-BAI_DATA_PATH = os.getenv("BAI_DATA_PATH")
 
-# Convertir a Path
-BAI_DATA_PATH = BASE_DIR / BAI_DATA_PATH if BAI_DATA_PATH else None
+def _resolve_from_env(env_var: str, default: str | None = None) -> Path | None:
+    """Resuelve una ruta relativa al proyecto desde una variable de entorno."""
+    value = os.getenv(env_var, default)
+    return BASE_DIR / value if value else None
+
+# Ruta desde .env
+BAI_DATA_PATH = _resolve_from_env("BAI_DATA_PATH")
 
 # Directorio para datos procesados
-DATA_PROCESSED_DIR = os.getenv("DATA_PROCESSED_DIR")
-DATA_PROCESSED_DIR = BASE_DIR / DATA_PROCESSED_DIR if DATA_PROCESSED_DIR else None
+DATA_PROCESSED_DIR = _resolve_from_env("DATA_PROCESSED_DIR")
 
 # Rutas de datasets derivados
-DATA_CLEANED = os.getenv("DATA_CLEANED_PATH")
-DATA_CLEANED = (
-    BASE_DIR / DATA_CLEANED
-    if DATA_CLEANED
-    else DATA_PROCESSED_DIR / "BAI_CLEANED.xlsx" if DATA_PROCESSED_DIR else None
+DATA_CLEANED = _resolve_from_env(
+    "DATA_CLEANED_PATH",
+    "data/processed/BAI_CLEANED.xlsx",
 )
-
-DATA_PROCESSED = os.getenv("DATA_PROCESSED_PATH")
-DATA_PROCESSED = (
-    BASE_DIR / DATA_PROCESSED
-    if DATA_PROCESSED
-    else DATA_PROCESSED_DIR / "BAI_PROCESSED.xlsx" if DATA_PROCESSED_DIR else None
+DATA_PROCESSED = _resolve_from_env(
+    "DATA_PROCESSED_PATH",
+    "data/processed/BAI_PROCESSED.xlsx",
+)
+SYMPTOM_CORRELATIONS_PATH = _resolve_from_env(
+    "SYMPTOM_CORRELATIONS_PATH",
+    "data/processed/symptom_correlations.csv",
 )
 
 # Directorio para figuras generadas
