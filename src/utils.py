@@ -373,3 +373,35 @@ def summarize_clusters(
     )
     cluster_summary["porcentaje"] = (cluster_summary["n"] / len(df) * 100).round(1)
     return cluster_summary
+
+
+def build_cluster_profile(
+    df: pd.DataFrame,
+    bai_columns: list[str] | None = None,
+    cluster_column: str = "cluster",
+) -> pd.DataFrame:
+    """Calcula el promedio de cada sintoma BAI por cluster."""
+    bai_columns = get_bai_columns(df) if bai_columns is None else bai_columns
+
+    if cluster_column not in df.columns:
+        raise ValueError(f"No existe la columna de cluster '{cluster_column}' en el DataFrame")
+
+    return df.groupby(cluster_column, observed=True)[bai_columns].mean()
+
+
+def export_clustered_dataset(
+    df: pd.DataFrame,
+    output_path: str | Path,
+    cluster_column: str = "cluster",
+    raw_cluster_column: str = "cluster_raw",
+    include_raw_cluster: bool = False,
+) -> Path:
+    """Exporta un CSV con la data clusterizada y oculta cluster_raw por defecto."""
+    if cluster_column not in df.columns:
+        raise ValueError(f"No existe la columna de cluster '{cluster_column}' en el DataFrame")
+
+    export_df = df.copy()
+    if not include_raw_cluster and raw_cluster_column in export_df.columns:
+        export_df = export_df.drop(columns=[raw_cluster_column])
+
+    return export_csv_with_fallback(export_df, output_path)

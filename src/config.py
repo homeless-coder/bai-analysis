@@ -36,6 +36,10 @@ FEATURE_IMPORTANCE_PATH = _resolve_from_env(
     "FEATURE_IMPORTANCE_PATH",
     "data/processed/feature_importance.csv",
 )
+CLUSTER_DATASET_PATH = _resolve_from_env(
+    "CLUSTER_DATASET_PATH",
+    "data/processed/bai_with_clusters.csv",
+)
 
 # Directorio para figuras generadas
 OUTPUTS_FIGURES = BASE_DIR / "outputs" / "figures"
