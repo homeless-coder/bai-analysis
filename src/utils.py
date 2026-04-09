@@ -353,6 +353,45 @@ def assign_ordered_clusters(
     return clustered_df
 
 
+def fit_bai_kmeans(
+    df: pd.DataFrame,
+    bai_columns: list[str] | None = None,
+    n_clusters: int = 3,
+    score_column: str = "totalScore",
+    raw_cluster_column: str = "cluster_raw",
+    cluster_column: str = "cluster",
+    random_state: int = 42,
+    n_init: int = 50,
+):
+    """Escala sintomas BAI, ajusta KMeans y retorna el dataset clusterizado."""
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+
+    bai_columns = get_bai_columns(df) if bai_columns is None else bai_columns
+    validate_bai_analysis_columns(df, bai_columns, required_columns=(score_column,))
+
+    X = df[bai_columns].copy()
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    model = KMeans(
+        n_clusters=n_clusters,
+        random_state=random_state,
+        n_init=n_init,
+    )
+
+    clustered_df = df.copy()
+    clustered_df[raw_cluster_column] = model.fit_predict(X_scaled)
+    clustered_df = assign_ordered_clusters(
+        clustered_df,
+        raw_cluster_column=raw_cluster_column,
+        score_column=score_column,
+        cluster_column=cluster_column,
+    )
+
+    return clustered_df, X, X_scaled, scaler, model
+
+
 def summarize_clusters(
     df: pd.DataFrame,
     cluster_column: str = "cluster",
@@ -389,6 +428,48 @@ def build_cluster_profile(
     return df.groupby(cluster_column, observed=True)[bai_columns].mean()
 
 
+def build_cluster_profile_report(
+    df: pd.DataFrame,
+    bai_columns: list[str] | None = None,
+    cluster_column: str = "cluster",
+    category_column: str = "category",
+    score_column: str = "totalScore",
+    top_n_symptoms: int = 5,
+) -> pd.DataFrame:
+    """Construye una tabla interpretable de perfiles por cluster."""
+    bai_columns = get_bai_columns(df) if bai_columns is None else bai_columns
+
+    if cluster_column not in df.columns:
+        raise ValueError(f"No existe la columna de cluster '{cluster_column}' en el DataFrame")
+
+    rows = []
+    profile_matrix = build_cluster_profile(df, bai_columns=bai_columns, cluster_column=cluster_column)
+
+    for cluster_name, symptom_means in profile_matrix.iterrows():
+        cluster_slice = df[df[cluster_column] == cluster_name]
+        top_symptoms = symptom_means.sort_values(ascending=False).head(top_n_symptoms)
+
+        dominant_category = None
+        if category_column in cluster_slice.columns:
+            dominant_category = cluster_slice[category_column].mode(dropna=True)
+            dominant_category = dominant_category.iloc[0] if not dominant_category.empty else None
+
+        rows.append({
+            "cluster": cluster_name,
+            "n": len(cluster_slice),
+            "porcentaje": round(len(cluster_slice) / len(df) * 100, 1),
+            "score_promedio": round(cluster_slice[score_column].mean(), 2),
+            "score_mediana": round(cluster_slice[score_column].median(), 2),
+            "categoria_dominante": dominant_category,
+            "sintomas_clave": " | ".join(
+                f"{BAI_SYMPTOMS.get(symptom, symptom)} ({value:.2f})"
+                for symptom, value in top_symptoms.items()
+            ),
+        })
+
+    return pd.DataFrame(rows)
+
+
 def export_clustered_dataset(
     df: pd.DataFrame,
     output_path: str | Path,
@@ -405,3 +486,24 @@ def export_clustered_dataset(
         export_df = export_df.drop(columns=[raw_cluster_column])
 
     return export_csv_with_fallback(export_df, output_path)
+
+
+def export_cluster_profiles(
+    df: pd.DataFrame,
+    output_path: str | Path,
+    bai_columns: list[str] | None = None,
+    cluster_column: str = "cluster",
+    category_column: str = "category",
+    score_column: str = "totalScore",
+    top_n_symptoms: int = 5,
+) -> Path:
+    """Exporta a CSV un resumen interpretable de perfiles por cluster."""
+    profile_report = build_cluster_profile_report(
+        df,
+        bai_columns=bai_columns,
+        cluster_column=cluster_column,
+        category_column=category_column,
+        score_column=score_column,
+        top_n_symptoms=top_n_symptoms,
+    )
+    return export_csv_with_fallback(profile_report, output_path)

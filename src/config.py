@@ -40,6 +40,10 @@ CLUSTER_DATASET_PATH = _resolve_from_env(
     "CLUSTER_DATASET_PATH",
     "data/processed/bai_with_clusters.csv",
 )
+CLUSTER_PROFILE_PATH = _resolve_from_env(
+    "CLUSTER_PROFILE_PATH",
+    "data/processed/cluster_profiles.csv",
+)
 
 # Directorio para figuras generadas
 OUTPUTS_FIGURES = BASE_DIR / "outputs" / "figures"
