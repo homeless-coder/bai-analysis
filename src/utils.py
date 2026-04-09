@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import warnings
 from pathlib import Path
 from textwrap import wrap
 
@@ -172,6 +173,77 @@ def export_symptom_correlations(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     correlation_table.to_csv(output_path, index=False)
     return output_path
+
+
+def export_csv_with_fallback(df: pd.DataFrame, output_path: str | Path) -> Path:
+    """Exporta un CSV y usa una ruta alternativa si el archivo destino esta bloqueado."""
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        df.to_csv(output_path, index=False)
+        return output_path
+    except PermissionError:
+        fallback_path = output_path.with_name(f"{output_path.stem}_latest{output_path.suffix}")
+        df.to_csv(fallback_path, index=False)
+        warnings.warn(
+            (
+                f"No se pudo escribir en {output_path}. "
+                f"Se exporto una copia en {fallback_path}."
+            ),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return fallback_path
+
+
+def build_feature_importance_table(
+    df: pd.DataFrame,
+    score_column: str = "totalScore",
+    bai_columns: list[str] | None = None,
+    n_estimators: int = 100,
+    random_state: int = 42,
+) -> pd.DataFrame:
+    """Entrena un Random Forest sobre el score total y retorna la importancia por sintoma."""
+    from sklearn.ensemble import RandomForestRegressor
+
+    bai_columns = get_bai_columns(df) if bai_columns is None else bai_columns
+    validate_bai_analysis_columns(df, bai_columns, required_columns=(score_column,))
+
+    model = RandomForestRegressor(
+        n_estimators=n_estimators,
+        random_state=random_state,
+    )
+    model.fit(df[bai_columns], df[score_column])
+
+    return (
+        pd.DataFrame({
+            "symptom": bai_columns,
+            "importance": model.feature_importances_,
+        })
+        .sort_values("importance", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+def export_feature_importance(
+    df: pd.DataFrame,
+    output_path: str | Path,
+    score_column: str = "totalScore",
+    bai_columns: list[str] | None = None,
+    n_estimators: int = 100,
+    random_state: int = 42,
+) -> Path:
+    """Exporta a CSV la importancia de sintomas BAI para predecir el score total."""
+    feature_importance_table = build_feature_importance_table(
+        df,
+        score_column=score_column,
+        bai_columns=bai_columns,
+        n_estimators=n_estimators,
+        random_state=random_state,
+    )
+
+    return export_csv_with_fallback(feature_importance_table, output_path)
 
 
 def build_category_counts(df: pd.DataFrame, category_order: list[str] | None = None) -> pd.DataFrame:

@@ -32,6 +32,10 @@ SYMPTOM_CORRELATIONS_PATH = _resolve_from_env(
     "SYMPTOM_CORRELATIONS_PATH",
     "data/processed/symptom_correlations.csv",
 )
+FEATURE_IMPORTANCE_PATH = _resolve_from_env(
+    "FEATURE_IMPORTANCE_PATH",
+    "data/processed/feature_importance.csv",
+)
 
 # Directorio para figuras generadas
 OUTPUTS_FIGURES = BASE_DIR / "outputs" / "figures"
